@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kripto Para Fiyatları</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .crypto-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .crypto-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin: 10px;
+            padding: 20px;
+            width: 200px;
+        }
+        #refresh-button {
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        #refresh-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>İlk 50 Kripto Para Fiyatları</h1>
+    <button id="refresh-button">Fiyatları Güncelle</button>
+    <div id="crypto-container" class="crypto-container"></div>
+
+    <script>
+        // CoinGecko'dan verileri çekme fonksiyonu
+        async function fetchTop50Cryptos() {
+            try {
+                const response = await axios.get('https://api.coingecko.com/api/v3/coins/markets', {
+                    params: {
+                        vs_currency: 'usd',
+                        order: 'market_cap_desc',
+                        per_page: 50,
+                        page: 1,
+                        sparkline: false
+                    }
+                });
+                return response.data;
+            } catch (error) {
+                console.error('Veri çekilirken hata oluştu:', error);
+                throw error;
+            }
+        }
+
+        // Verileri çekip sayfada gösterme
+        async function displayCryptos() {
+            const cryptoContainer = document.getElementById('crypto-container');
+            cryptoContainer.innerHTML = ''; // Eski verileri temizle
+            try {
+                const cryptos = await fetchTop50Cryptos();
+                
+                cryptos.forEach(crypto => {
+                    const cryptoCard = document.createElement('div');
+                    cryptoCard.classList.add('crypto-card');
+                    
+                    cryptoCard.innerHTML = `
+                        <h2>${crypto.name} (${crypto.symbol.toUpperCase()})</h2>
+                        <p>Fiyat: $${crypto.current_price}</p>
+                        <p>Piyasa Değeri: $${crypto.market_cap}</p>
+                    `;
+
+                    cryptoContainer.appendChild(cryptoCard);
+                });
+            } catch (error) {
+                cryptoContainer.innerHTML = '<p>Veriler yüklenirken bir hata oluştu.</p>';
+            }
+        }
+
+        // Butona tıklanınca verileri güncelle
+        document.getElementById('refresh-button').addEventListener('click', function (event) {
+            event.preventDefault();  // Sayfa yenilenmesini önle
+            displayCryptos();  // Verileri güncelle
+        });
+
+        // Sayfa yüklendiğinde verileri göster
+        window.onload = displayCryptos;
+    </script>
+</body>
+</html>
